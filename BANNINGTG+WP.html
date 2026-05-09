@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Violation Reporter - Telegram & WhatsApp</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    overflow: hidden;
+}
+
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.header p {
+    opacity: 0.9;
+}
+
+.platform-selector {
+    display: flex;
+    padding: 0;
+    background: #f0f0f0;
+}
+
+.platform-btn {
+    flex: 1;
+    padding: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #e0e0e0;
+    color: #666;
+}
+
+.platform-btn.active {
+    background: white;
+    color: #667eea;
+    border-bottom: 3px solid #667eea;
+}
+
+.platform-btn.telegram:hover, .platform-btn.telegram.active {
+    background: white;
+    color: #0088cc;
+}
+
+.platform-btn.whatsapp:hover, .platform-btn.whatsapp.active {
+    background: white;
+    color: #25D366;
+}
+
+.content {
+    padding: 30px;
+    display: none;
+}
+
+.content.active {
+    display: block;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.required:after {
+    content: " *";
+    color: red;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.file-input-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.file-input-wrapper input[type="file"] {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+.file-input-label {
+    display: block;
+    padding: 12px;
+    background: #f0f0f0;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.file-input-label:hover {
+    background: #e0e0e0;
+    border-color: #667eea;
+}
+
+.preview {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    display: none;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.preview img {
+    max-width: 100px;
+    margin: 5px;
+    border-radius: 4px;
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 14px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: transform 0.2s;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+}
+
+.alert {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: none;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+.info-box {
+    background: #e3f2fd;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #2196f3;
+}
+
+.info-box h4 {
+    margin-bottom: 10px;
+    color: #1976d2;
+}
+
+.char-counter {
+    font-size: 12px;
+    color: #666;
+    text-align: right;
+    margin-top: 5px;
+}
+
+.severity-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.high { background: #dc3545; color: white; }
+.medium { background: #ffc107; color: #333; }
+.low { background: #28a745; color: white; }
+
+.email-list {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    margin-top: 10px;
+}
+
+.warning-box {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+
+.warning-box h4 {
+    color: #856404;
+    margin-bottom: 10px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🚨 Violation Reporting System</h1>
+        <p>Report scammers, abusers, and TOS violators effectively</p>
+    </div>
+    
+    <div class="platform-selector">
+        <button class="platform-btn telegram active" onclick="switchPlatform('telegram')">📱 Telegram Report</button>
+        <button class="platform-btn whatsapp" onclick="switchPlatform('whatsapp')">💚 WhatsApp Report</button>
+    </div>
+    
+    <!-- TELEGRAM SECTION -->
+    <div id="telegramContent" class="content active">
+        <div class="info-box">
+            <h4>📧 Reports will be sent to Telegram's OFFICIAL abuse channels:</h4>
+            <ul style="margin-left: 20px; color: #555;">
+                <li><strong>abuse@telegram.org</strong> - Main abuse reporting (BEST OPTION)</li>
+                <li><strong>dsa@telegram.org</strong> - Digital Services Act (EU users)</li>
+                <li><strong>stopca@telegram.org</strong> - For child abuse content ONLY</li>
+                <li><strong>copyright@telegram.org</strong> - For copyright violations</li>
+            </ul>
+        </div>
+        
+        <div id="telegramAlert" class="alert"></div>
+        
+        <form id="telegramForm">
+            <div class="form-group">
+                <label class="required">Violation Severity</label>
+                <select id="tgSeverity" required>
+                    <option value="">Select severity...</option>
+                    <option value="high">🔴 HIGH - Scam/Fraud/Harassment/Threats</option>
+                    <option value="medium">🟡 MEDIUM - Spam/Impersonation</option>
+                    <option value="low">🟢 LOW - Minor violations</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="required">Your Contact Email</label>
+                <input type="email" id="tgEmail" placeholder="your@email.com" required>
+                <small>Telegram may contact you for additional evidence</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="required">Violator's Username</label>
+                <input type="text" id="tgViolator" placeholder="@username or t.me/username" required>
+                <small>Example: @scammer123 or t.me/scammer123</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="required">Violation Type</label>
+                <select id="tgViolationType" required>
+                    <option value="">Select violation...</option>
+                    <option value="scam_fraud">💰 Scam / Fraud (money theft, fake crypto)</option>
+                    <option value="harassment_threats">😡 Harassment / Death Threats / Stalking</option>
+                    <option value="illegal_goods">🔫 Illegal goods / Drugs / Weapons</option>
+                    <option value="child_abuse">👶 Child abuse material (URGENT)</option>
+                    <option value="impersonation">🎭 Impersonation</option>
+                    <option value="spam_phishing">📧 Spam / Phishing links</option>
+                    <option value="hate_speech">💔 Hate speech / Discrimination</option>
+                    <option value="doxxing">📋 Doxxing (sharing private info)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="required">Detailed Evidence Description</label>
+                <textarea id="tgDescription" placeholder="Provide detailed information:
+• What exactly happened?
+• When did it happen? (date/time)
+• How did the violator contact you?
+• What damages occurred?
+• Any witnesses?" required></textarea>
+                <div class="char-counter"><span id="tgCharCount">0</span>/3000 characters</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Screenshots Evidence (STRONGLY RECOMMENDED)</label>
+                <div class="file-input-wrapper">
+                    <div class="file-input-label">📎 Click to upload screenshots</div>
+                    <input type="file" id="tgEvidence" accept="image/png,image/jpeg,image/jpg" multiple>
+                </div>
+                <div id="tgFileList" class="preview"></div>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="tgConfirm" required>
+                    ✅ I confirm this is a LEGITIMATE report based on actual evidence
+                </label>
+            </div>
+            
+            <button type="submit" class="btn-submit">📧 Send Report to Telegram</button>
+        </form>
+    </div>
+    
+    <!-- WHATSAPP SECTION -->
+    <div id="whatsappContent" class="content">
+        <div class="info-box">
+            <h4>📧 Reports will be sent to WhatsApp's OFFICIAL abuse channels:</h4>
+            <ul style="margin-left: 20px; color: #555;">
+                <li><strong>abuse@whatsapp.com</strong> - Main abuse reporting (BEST)</li>
+                <li><strong>support@whatsapp.com</strong> - General support (forwards to abuse)</li>
+                <li><strong>legal@whatsapp.com</strong> - Legal violations</li>
+                <li><strong>dmca@whatsapp.com</strong> - Copyright violations</li>
+                <li><strong>privacy@whatsapp.com</strong> - Privacy violations</li>
+                <li><strong>safety@whatsapp.com</strong> - Safety concerns</li>
+            </ul>
+        </div>
+        
+        <div id="whatsappAlert" class="alert"></div>
+        
+        <form id="whatsappForm">
+            <div class="form-group">
+                <label class="required">Violation Severity</label>
+                <select id="waSeverity" required>
+                    <option value="">Select severity...</option>
+                    <option value="high">🔴 HIGH - Scam/Abuse/Threats/Illegal</option>
+                    <option value="medium">🟡 MEDIUM - Spam/Impersonation</option>
+                    <option value="low">🟢 LOW - Minor violations</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="required">Your Contact Email</label>
+                <input type="email" id="waEmail" placeholder="your@email.com" required>
+                <small>WhatsApp may contact you for additional evidence</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="required">Violator's Phone Number</label>
+                <input type="text" id="waViolator" placeholder="+1234567890 or 1234567890" required>
+                <small>Full phone number with country code (e.g., +1 for USA, +44 for UK)</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="required">Violation Type</label>
+                <select id="waViolationType" required>
+                    <option value="">Select violation...</option>
+                    <option value="scam_fraud">💰 Scam / Fraud / Fake giveaway</option>
+                    <option value="harassment_threats">😡 Harassment / Threats / Bullying</option>
+                    <option value="illegal_goods">🔫 Illegal goods / Drugs / Weapons sales</option>
+                    <option value="child_abuse">👶 Child abuse material (URGENT)</option>
+                    <option value="impersonation">🎭 Impersonation (fake account)</option>
+                    <option value="spam_phishing">📧 Spam / Phishing / Fake links</option>
+                    <option value="hate_speech">💔 Hate speech / Discrimination</option>
+                    <option value="doxxing">📋 Doxxing (sharing private info)</option>
+                    <option value="fake_news">📰 Misinformation / Fake news</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="required">Detailed Evidence Description</label>
+                <textarea id="waDescription" placeholder="Provide detailed information:
+• What exactly happened?
+• When did it happen? (date/time)
+• What messages were sent?
+• Screenshots attached?
+• Any other victims?" required></textarea>
+                <div class="char-counter"><span id="waCharCount">0</span>/3000 characters</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Screenshots Evidence (CRITICAL)</label>
+                <div class="file-input-wrapper">
+                    <div class="file-input-label">📎 Click to upload screenshots</div>
+                    <input type="file" id="waEvidence" accept="image/png,image/jpeg,image/jpg" multiple>
+                </div>
+                <div id="waFileList" class="preview"></div>
+                <small>⚠️ WhatsApp requires screenshots showing the violation clearly</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Group Link (if applicable)</label>
+                <input type="text" id="waGroupLink" placeholder="https://chat.whatsapp.com/...">
+                <small>If violation occurred in a WhatsApp group, paste the invite link</small>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="waConfirm" required>
+                    ✅ I confirm this is a LEGITIMATE report based on actual evidence
+                </label>
+            </div>
+            
+            <button type="submit" class="btn-submit">📧 Send Report to WhatsApp</button>
+        </form>
+        
+        <div class="warning-box">
+            <h4>⚠️ Important WhatsApp Reporting Tips:</h4>
+            <ul style="margin-left: 20px;">
+                <li>Always include screenshots showing the phone number and violation</li>
+                <li>Report through the WhatsApp app first (Settings → Help → Contact Us)</li>
+                <li>Multiple reports from different users increase chances of action</li>
+                <li>WhatsApp bans accounts for TOS violations permanently</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+let tgFiles = [];
+let waFiles = [];
+
+// Platform switching
+function switchPlatform(platform) {
+    // Update button styles
+    document.querySelectorAll('.platform-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    if (platform === 'telegram') {
+        document.querySelector('.platform-btn.telegram').classList.add('active');
+        document.getElementById('telegramContent').classList.add('active');
+        document.getElementById('whatsappContent').classList.remove('active');
+    } else {
+        document.querySelector('.platform-btn.whatsapp').classList.add('active');
+        document.getElementById('whatsappContent').classList.add('active');
+        document.getElementById('telegramContent').classList.remove('active');
+    }
+}
+
+// Telegram file handling
+document.getElementById('tgEvidence').addEventListener('change', function(e) {
+    tgFiles = Array.from(e.target.files);
+    updateFileList('tg');
+});
+
+// WhatsApp file handling
+document.getElementById('waEvidence').addEventListener('change', function(e) {
+    waFiles = Array.from(e.target.files);
+    updateFileList('wa');
+});
+
+function updateFileList(platform) {
+    const fileListDiv = document.getElementById(`${platform}FileList`);
+    const files = platform === 'tg' ? tgFiles : waFiles;
+    
+    if (files.length === 0) {
+        fileListDiv.style.display = 'none';
+        return;
+    }
+    
+    fileListDiv.style.display = 'block';
+    fileListDiv.innerHTML = '<strong>📸 Evidence attached:</strong><br>';
+    
+    files.forEach(file => {
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.maxWidth = '80px';
+                img.style.margin = '5px';
+                img.style.borderRadius = '4px';
+                fileListDiv.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+            fileListDiv.innerHTML += `<div>📷 ${file.name} (${(file.size/1024).toFixed(0)} KB)</div>`;
+        }
+    });
+}
+
+function showAlert(platform, message, type) {
+    const alertDiv = document.getElementById(`${platform}Alert`);
+    alertDiv.className = `alert alert-${type}`;
+    alertDiv.innerHTML = message;
+    alertDiv.style.display = 'block';
+    setTimeout(() => {
+        alertDiv.style.display = 'none';
+    }, 5000);
+}
+
+// Character counters
+document.getElementById('tgDescription').addEventListener('input', function() {
+    document.getElementById('tgCharCount').innerText = this.value.length;
+});
+document.getElementById('waDescription').addEventListener('input', function() {
+    document.getElementById('waCharCount').innerText = this.value.length;
+});
+
+// Telegram email function
+function getTelegramEmails(violationType) {
+    if (violationType === 'child_abuse') {
+        return 'stopca@telegram.org';
+    } else if (violationType === 'copyright') {
+        return 'copyright@telegram.org';
+    } else {
+        return 'abuse@telegram.org,dsa@telegram.org';
+    }
+}
+
+// WhatsApp email function - ALL working WhatsApp emails
+function getWhatsAppEmails(violationType) {
+    // All legitimate WhatsApp abuse/reporting emails
+    const baseEmails = 'abuse@whatsapp.com,support@whatsapp.com';
+    
+    if (violationType === 'child_abuse') {
+        return 'abuse@whatsapp.com,safety@whatsapp.com'; // Priority for child abuse
+    } else if (violationType === 'copyright') {
+        return 'dmca@whatsapp.com,legal@whatsapp.com';
+    } else if (violationType === 'privacy' || violationType === 'doxxing') {
+        return 'privacy@whatsapp.com,abuse@whatsapp.com';
+    } else {
+        return baseEmails + ',legal@whatsapp.com,safety@whatsapp.com';
+    }
+}
+
+// Telegram form submission
+document.getElementById('telegramForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const severity = document.getElementById('tgSeverity').value;
+    const email = document.getElementById('tgEmail').value;
+    const violator = document.getElementById('tgViolator').value;
+    const violationType = document.getElementById('tgViolationType').value;
+    const description = document.getElementById('tgDescription').value;
+    
+    if (!severity || !email || !violator || !violationType || !description) {
+        showAlert('telegram', '❌ Please fill in all required fields', 'error');
+        return;
+    }
+    
+    if (!document.getElementById('tgConfirm').checked) {
+        showAlert('telegram', '❌ Confirm this is a legitimate report', 'error');
+        return;
+    }
+    
+    let cleanViolator = violator;
+    if (!violator.startsWith('@') && !violator.includes('t.me/')) {
+        cleanViolator = '@' + violator;
+    }
+    
+    const subject = encodeURIComponent(`[${severity.toUpperCase()}] ${violationType} Violation - User: ${cleanViolator}`);
+    
+    let body = `To Telegram Moderation Team,
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VIOLATION REPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Reporter Email: ${email}
+Violator Username: ${cleanViolator}
+Severity: ${severity.toUpperCase()}
+Violation Type: ${violationType}
+Date: ${new Date().toLocaleString()}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DESCRIPTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${description}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EVIDENCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Screenshots Attached: ${tgFiles.length > 0 ? 'Yes (' + tgFiles.length + ' files)' : 'No'}
+
+This account is violating Telegram's Terms of Service. Please investigate and take appropriate action including account restriction or permanent ban.
+
+I confirm this report is made in good faith with supporting evidence.
+
+Respectfully,
+Concerned User
+Report ID: ${Date.now()}`;
+    
+    const recipients = getTelegramEmails(violationType);
+    window.location.href = `mailto:${recipients}?subject=${subject}&body=${encodeURIComponent(body)}`;
+    
+    showAlert('telegram', `✅ Report prepared! Sending to: ${recipients}`, 'success');
+});
+
+// WhatsApp form submission
+document.getElementById('whatsappForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const severity = document.getElementById('waSeverity').value;
+    const email = document.getElementById('waEmail').value;
+    const violator = document.getElementById('waViolator').value;
+    const violationType = document.getElementById('waViolationType').value;
+    const description = document.getElementById('waDescription').value;
+    const groupLink = document.getElementById('waGroupLink').value;
+    
+    if (!severity || !email || !violator || !violationType || !description) {
+        showAlert('whatsapp', '❌ Please fill in all required fields', 'error');
+        return;
+    }
+    
+    if (!document.getElementById('waConfirm').checked) {
+        showAlert('whatsapp', '❌ Confirm this is a legitimate report', 'error');
+        return;
+    }
+    
+    // Format phone number
+    let cleanNumber = violator;
+    if (!violator.startsWith('+')) {
+        cleanNumber = '+' + violator;
+    }
+    
+    const subject = encodeURIComponent(`[${severity.toUpperCase()}] WhatsApp Abuse Report - ${violationType}`);
+    
+    let body = `To WhatsApp Trust & Safety Team,
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+URGENT ABUSE REPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Reporter Contact: ${email}
+Violator Phone: ${cleanNumber}
+${groupLink ? `Group Link: ${groupLink}\n` : ''}
+Severity: ${severity.toUpperCase()}
+Violation Type: ${violationType}
+Report Date: ${new Date().toLocaleString()}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VIOLATION DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${description}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EVIDENCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Screenshots Attached: ${waFiles.length > 0 ? 'Yes (' + waFiles.length + ' files)' : 'No'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ACTION REQUESTED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This account/group is violating WhatsApp's Terms of Service. I request:
+
+✓ Immediate investigation
+✓ Account restriction/permanent ban
+✓ Content removal
+✓ Prevention of further violations
+
+I confirm this report is based on actual evidence and made in good faith.
+
+Respectfully submitted,
+Concerned WhatsApp User
+Reference: WA-${Date.now()}
+
+---
+This report was sent via WhatsApp Violation Reporter
+WhatsApp Terms of Service: https://www.whatsapp.com/legal/`;
+    
+    const recipients = getWhatsAppEmails(violationType);
+    window.location.href = `mailto:${recipients}?subject=${subject}&body=${encodeURIComponent(body)}`;
+    
+    showAlert('whatsapp', `✅ Report prepared! Sending to: ${recipients}\n\n📌 TIP: Also report in-app for faster action!`, 'success');
+});
+</script>
+
+</body>
+</html>
